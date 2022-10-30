@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Search 2006</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrapper">
+    <img class="logo" src="youtube-logo.gif" alt="2006 youtube logo">
+    <h1>browse youtube videos like it's 2006</h1>
+    <p class="copy">this page uses the YouTube API to search for videos. the user interface is inspired by youtube.com's - from one of the <span class="bold">greatest years of all time</span>.</p>
+    <div class="search__container">
+      <input id="search-input" type="text"> 
+      <input id="search-button" type="submit">
+    </div>
+    
+    <div id="container" class="container" style="display: none;">
+      <div id="container-header" class="container__header"></div>
+    </div>  
+  </div>
+  
+  <script>
+    var searchButton = document.querySelector('#search-button');
+    var inputValue = '';
+    var container = document.querySelector('#container');
+    
+    searchButton.addEventListener('click', () => {
+      if (container.style.display === 'none') {
+        container.style.display = 'block';
+      }
+      inputValue = document.querySelector('#search-input').value;
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            var results = document.querySelectorAll('.result');
+            if (results.length > 0) {
+              for (var result of results) {
+                result.remove();
+              }
+            }
+            var videoData = JSON.parse(xhttp.responseText);
+            var items = videoData.items;
+            document.querySelector('#container-header').textContent = `video results for '${inputValue}' - results 1-${items.length}`
+            for (var item of items) {
+              var jsonImgUrl = JSON.stringify(item.snippet.thumbnails.default.url);
+              var imgUrl = jsonImgUrl.replace(/['"]+/g, '');
+
+              var jsonTitle = JSON.stringify(item.snippet.title);
+              var title = jsonTitle.replace(/['"]+/g, '');
+
+              var jsonVideoId = JSON.stringify(item.id.videoId);
+              var videoId = jsonVideoId.replace(/['"]+/g, '');
+
+              var jsonDescription = JSON.stringify(item.snippet.description);
+              var description = jsonDescription.replace(/['"]+/g, '');
+
+              var jsonChannelId = JSON.stringify(item.snippet.channelId);
+              var channelId = jsonChannelId.replace(/['"]+/g, '');
+
+              var jsonChannelName = JSON.stringify(item.snippet.channelTitle);
+              var channelName = jsonChannelName.replace(/['"]+/g, '');
+
+              var domTitle = document.createElement('div');
+              domTitle.classList.add('result')
+              domTitle.innerHTML = `
+                <div class="result__thumbnail">
+                  <img src="${imgUrl}" alt="thumbnail image for ${title}">
+                </div>
+                <div class="result__text">
+                  <a class="result__text-title" href="https://www.youtube.com/watch?v=${videoId}" target="__blank">${title}</a>
+                  <p>${description}</p>
+                  <p>From: <a href="https://www.youtube.com/channel/${channelId}" target="__blank">${channelName}</a></p>
+                </div>
+                
+                
+              `;
+              document.querySelector('#container').append(domTitle);
+            }
+          }
+      };
+      xhttp.open("GET", `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${inputValue}&maxResults=20&type=video&key=AIzaSyDCMEQO51Y_Zfjkrjw4RrW8ABjhR42Uha0`, true);
+      xhttp.send();
+    });
+  </script>
+</body>
+</html>
